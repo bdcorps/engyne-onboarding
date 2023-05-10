@@ -1,10 +1,14 @@
+import BlogDrawer from '@/components/BlogDrawer';
 import { Box, Button, Container, Input, Tab, TabList, TabPanel, TabPanels, Tabs, Text, VStack } from '@chakra-ui/react';
+import { createParser } from 'eventsource-parser';
 import { useState } from 'react';
 
 export default function Home() {
 const [url, setURL] = useState("")
-const [ideas, setIdeas] = useState([])
+const [ideas, setIdeas] = useState(["How to exit a startup?"])
 const [prompt, setPrompt] = useState("")
+const [blogTitle, setBlogTitle] = useState("")
+const [blogContent, setBlogContent] = useState("")
 
 const [product, setProduct] = useState("")
 const [targetAudience, setTargetAudience] = useState("")
@@ -12,7 +16,7 @@ const [targetAudience, setTargetAudience] = useState("")
 const [loadingScrape, setLoadingScrape] = useState(false)
 const [loadingIdeas, setLoadingIdeas] = useState(false)
 const [loadingIngest, setLoadingIngest] = useState(false)
-const [loadingBlog, setLoadingBlog] = useState(false)
+const [loadingGenerate, setLoadingGenerate] = useState(false)
 
 
 // const library = [
@@ -89,24 +93,87 @@ fetch('/api/ingest-old', {
 });
 }
 
-const handleGenerateBlog = async (text:string) => {
-  setLoadingBlog(true)
-fetch('/api/generate', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ title:text }),
-})
-.then(response => response.json())
-.then(({data}:any) => {
-  setLoadingBlog(false)
-  console.log('Success:', data);
-})
-.catch((error) => {
-  console.error('Error:', error);
-});
+async function handleGenerateBlog(title:string) {
+  const response = await fetch('/api/generate-old', {
+    method: 'POST',
+    body: JSON.stringify({
+      title
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+if (!response || !response.body){
+  return
 }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  function onParse(event:any) {
+    if (event.type === 'event') {
+      try {
+        const data = JSON.parse(event.data);
+        data.choices
+          .filter(({ delta }:any) => !!delta.content)
+          .forEach(({ delta }:any) => {
+            setBlogContent((prev:string )=> {
+              return `${prev || ''}${delta.content}`;
+            })
+          });
+      } catch(e) {
+        console.log(e)
+      }
+    }
+  }
+
+  const parser = createParser(onParse)
+
+  while (true) {
+    const { value, done } = await reader.read();
+    const dataString = decoder.decode(value);
+    if ( done || dataString.includes('[DONE]') ) break;
+    parser.feed(dataString);
+  }
+
+  // setIsLoading(false);
+}
+
+
+// const handleGenerateBlog = async (text:string) => {
+//   setLoadingGenerate(true)
+// const response = await fetch('/api/generate-old', {
+//   method: 'POST',
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+//   body: JSON.stringify({ title:text }),
+// })
+
+// if (!response.ok) {
+//   throw new Error(response.statusText);
+// }
+
+// // This data is a ReadableStream
+// const data = response.body;
+// if (!data) {
+//   return;
+// }
+
+// const reader = data.getReader();
+// const decoder = new TextDecoder();
+// let done = false;
+
+// while (!done) {
+//   const { value, done: doneReading } = await reader.read();
+//   done = doneReading;
+//   const chunkValue = decoder.decode(value);
+//   setBlogContent((prev:string) => prev + chunkValue);
+// }
+// setLoadingGenerate(false);
+
+// }
 
   return (
     <Container maxW="container.md" pt={10}>
@@ -143,12 +210,14 @@ fetch('/api/generate', {
         ideas.map((item, index)=>(
           <Box p={2} _hover={{backgroundColor:"gray.50", cursor:"pointer", rounded:"md"}} key={index} w="full" onClick={()=>{
             handleGenerateBlog(item)
+            setBlogTitle(item)
           }}>
           <Text>{index+1}. {item}</Text>
           </Box>
         ))
       }
     </VStack>
+    {blogTitle && <BlogDrawer title={blogTitle} content={blogContent}></BlogDrawer>}
 
     {/* <Text whiteSpace="pre-line">{ideas}</Text> */}
     </VStack>

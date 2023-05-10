@@ -37,7 +37,7 @@ $($('body').find('h1,h2,h3,h4,h5,h6,p,a')).each(function(index, element) {
   
 }
 
-const getOpenAIAnswer = async (context:string) => {
+export const getOpenAIAnswer = async (context:string) => {
   const completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     temperature: 0.7,
