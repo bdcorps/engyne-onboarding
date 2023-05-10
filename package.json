@@ -9,14 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@chakra-ui/react": "^2.6.1",
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@pinecone-database/pinecone": "^0.0.14",
     "@types/node": "20.1.0",
     "@types/react": "18.2.6",
     "@types/react-dom": "18.2.4",
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
     "eslint": "8.40.0",
     "eslint-config-next": "13.4.1",
+    "framer-motion": "^10.12.8",
+    "langchain": "^0.0.72",
     "next": "13.4.1",
+    "openai": "^3.2.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "scrapingbee": "^1.7.2",
     "typescript": "5.0.4"
   }
 }
