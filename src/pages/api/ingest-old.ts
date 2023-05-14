@@ -31,8 +31,6 @@ const upsertVectorsIntoPinecone = async (docs:any[]) => {
     environment: process.env.PINECONE_ENVIRONMENT as string,
   });
 
-
-
 const index = client.Index("devplan");
 const res = await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
   pineconeIndex: index

@@ -54,9 +54,9 @@ const id = doc.id
 console.log({content,id})
 
 const embedding = await generateEmbeddingsFromOpenAI(content);
-const a = await upsertVectorsIntoPinecone({ id, embedding, locale: "en" });
+const result = await upsertVectorsIntoPinecone({ id, embedding, locale: "en" });
 
-console.log({a})
+console.log({result})
 
 }
 
