@@ -36,7 +36,7 @@ const BlogDrawer: FunctionComponent<BlogDrawerProps> = ({
         <DrawerCloseButton onClick={() => setIsDrawerOpen(false)} />
         <DrawerHeader>{title}</DrawerHeader>
         <DrawerBody>
-          <Text>{content}</Text>
+          <Text whiteSpace="pre-line">{content}</Text>
         </DrawerBody>
       </DrawerContent>
     </Drawer>

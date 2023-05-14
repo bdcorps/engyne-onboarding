@@ -135,6 +135,8 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
   async function handleGenerateBlog() {
     setIsWriting(true);
 
+    console.log("wabout to write");
+
     const response = await fetch("/api/generate-old", {
       method: "POST",
       body: JSON.stringify({
@@ -146,6 +148,8 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
     });
 
     if (!response || !response.body) {
+      console.log("no body");
+
       return;
     }
 
@@ -155,6 +159,8 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
     function onParse(event: any) {
       if (event.type === "event") {
         try {
+          console.log("data coming in ");
+
           const data = JSON.parse(event.data);
           data.choices
             .filter(({ delta }: any) => !!delta.content)
@@ -177,6 +183,8 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
       if (done || dataString.includes("[DONE]")) break;
       parser.feed(dataString);
     }
+
+    console.log("done writing");
 
     setIsWriting(false);
   }
@@ -206,9 +214,7 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
         <Button variant="ghost">Write →</Button>
       )}
 
-      {isWriting && (
-        <BlogDrawer title={title} content={content} isOpen={true}></BlogDrawer>
-      )}
+      <BlogDrawer title={title} content={content} isOpen={true}></BlogDrawer>
     </HStack>
   );
 };
