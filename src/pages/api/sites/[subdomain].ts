@@ -1,6 +1,4 @@
 import prisma from '../../../../lib/prisma';
-import { APIResponse } from '/types';
-
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 export async function getSiteBySubdomain(subdomain: string) {
@@ -38,7 +36,7 @@ const Site = async (req: NextApiRequest, res: NextApiResponse) => {
 
         const serializedSite = JSON.parse(JSON.stringify(site));
         // TODO: apply this kind of (no data) responses for the rest of the endpoints
-        const response: APIResponse = serializedSite
+        const response = serializedSite
         return res.status(200).json(
           response
         );

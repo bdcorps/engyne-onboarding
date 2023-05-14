@@ -272,6 +272,7 @@ export default function Home() {
                 <BlogDrawer
                   title={blogTitle}
                   content={blogContent}
+                  isOpen
                 ></BlogDrawer>
               }
 
