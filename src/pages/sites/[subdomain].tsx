@@ -165,6 +165,7 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
           data.choices
             .filter(({ delta }: any) => !!delta.content)
             .forEach(({ delta }: any) => {
+              console.log("writing", delta.content);
               setContent((prev: string) => {
                 return `${prev || ""}${delta.content}`;
               });
