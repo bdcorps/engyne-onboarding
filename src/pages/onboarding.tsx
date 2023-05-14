@@ -103,7 +103,7 @@ const Onboarding: FunctionComponent<OnboardingProps> = () => {
         <Heading color="white">Engyne LLM</Heading>
       </VStack>
 
-      <Box backgroundColor="brand.50" w="full" h="full">
+      <Box w="full" h="full">
         <Center alignItems="center" justifyItems="center" w="full" h="full">
           <VStack w={500} align="flex-start" spacing={10}>
             <VStack w={500} align="flex-start" spacing={2}>

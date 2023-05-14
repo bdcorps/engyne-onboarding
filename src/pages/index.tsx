@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { Button, Text } from "@chakra-ui/react";
+import { Button, Center, Link, Text, VStack } from "@chakra-ui/react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { FunctionComponent } from "react";
 
@@ -10,27 +10,37 @@ const Index: FunctionComponent<IndexProps> = () => {
 
   if (session) {
     return (
-      <>
-        Signed in as {session.user!.email} <br />
-        <button onClick={() => signOut()}>Sign out</button>
-      </>
+      <Center h="100vh" alignItems="center" justifyItems="center">
+        <VStack w="full">
+          <Text>Engyne</Text>
+          <Text fontWeight={600} fontSize="lg">
+            Hi {session.user!.name}!
+          </Text>
+          <Link href="/onboarding">Start Creating →</Link>
+          <Button onClick={() => signOut()} variant="ghost">
+            Sign out
+          </Button>
+        </VStack>
+      </Center>
     );
   }
   return (
     <>
       <Layout>
-        <Text>Not signed in</Text>
-        <Button
-          colorScheme="brand"
-          onClick={(e) => {
-            e.preventDefault();
-            signIn("google", {
-              callbackUrl: `/onboarding`,
-            });
-          }}
-        >
-          Sign in with Google
-        </Button>
+        <Center h="100vh" alignItems="center" justifyItems="center">
+          <Text>Not signed in</Text>
+          <Button
+            colorScheme="brand"
+            onClick={(e) => {
+              e.preventDefault();
+              signIn("google", {
+                callbackUrl: `/onboarding`,
+              });
+            }}
+          >
+            Sign in with Google
+          </Button>
+        </Center>
       </Layout>
     </>
   );
