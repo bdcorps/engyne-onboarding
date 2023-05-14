@@ -10,7 +10,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { FunctionComponent, useCallback, useState } from "react";
+import { FunctionComponent, useState } from "react";
 
 interface SiteProps {}
 
@@ -131,30 +131,42 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
   const [content, setContent] = useState("");
   const [isWriting, setIsWriting] = useState<boolean>(false);
 
-  const handleGenerateBlog = useCallback(() => {
+  const handleGenerateBlog = async () => {
     setIsWriting(true);
 
-    setContent("");
+    console.log("wabout to write");
 
-    const aiStream = new EventSource(
-      `/api/generate-old?title=${encodeURIComponent(title)}`
-    );
-
-    aiStream.addEventListener("message", (e) => {
-      if (e.data === "[DONE]") {
-        aiStream.close();
-        setIsWriting(false);
-        return;
-      }
-
-      const message = JSON.parse(e.data);
-      const delta = message.choices[0].delta.content;
-
-      if (delta) {
-        setContent((prev: any) => prev + delta);
-      }
+    const response = await fetch("/api/generate-old", {
+      method: "POST",
+      body: JSON.stringify({
+        title,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
-  }, [setContent, content, title]);
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+
+    const data = response.body;
+    if (!data) {
+      return;
+    }
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+      setContent((prev: string) => prev + chunkValue);
+    }
+
+    setIsWriting(false);
+  };
 
   // async function handleGenerateBlog() {
   //   setIsWriting(true);

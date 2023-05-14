@@ -1,13 +1,11 @@
-import { PineconeClient } from "@pinecone-database/pinecone";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { PineconeStore } from "langchain/vectorstores/pinecone";
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
+import { OpenAIStream } from "../../../lib/openai";
 // import { Configuration, OpenAIApi } from "openai";
 const { Configuration, OpenAIApi } = require("openai");
 
-// export const config = {
-//   runtime: "edge",
-// };
+export const config = {
+  runtime: "edge",
+};
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,43 +13,41 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: NextRequest,
+  res: NextResponse
 ) {
+  const json = await req.json();
 
-  res.writeHead(200, {
-    "Content-Type": "text/event-stream",
-    'Content-Encoding': 'none',
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-  });
+  const title = json.title as string
 
-  const title = req.query.title as string
-  const client = new PineconeClient();
+  console.log(title)
 
-  console.log({ title })
+  // const client = new PineconeClient();
 
-  // Initialize the client
-  await client.init({
-    apiKey: process.env.PINECONE_API_KEY as string,
-    environment: process.env.PINECONE_ENVIRONMENT as string,
-  });
+  // console.log({ title })
 
-  const index = client.Index("devplan");
+  // // Initialize the client
+  // await client.init({
+  //   apiKey: process.env.PINECONE_API_KEY as string,
+  //   environment: process.env.PINECONE_ENVIRONMENT as string,
+  // });
 
-  const vectorStore = await PineconeStore.fromExistingIndex(
-    new OpenAIEmbeddings(),
-    { pineconeIndex: index }
-  );
+  // const index = client.Index("devplan");
+
+  // const vectorStore = await PineconeStore.fromExistingIndex(
+  //   new OpenAIEmbeddings(),
+  //   { pineconeIndex: index }
+  // );
 
 
-  const results = await vectorStore.similaritySearch(title, 1, {
+  // const results = await vectorStore.similaritySearch(title, 1, {
 
-  });
+  // });
 
-  console.log({ results });
+  // console.log({ results });
 
-  const context = results[0].pageContent
+  // const context = "results[0].pageContent"
+  const context = ""
   const topic = title
 
   const prompt = `Use the context below to write a 400 word blog post about the topic below:
@@ -59,69 +55,21 @@ export default async function handler(
     Topic: ${topic}
     Blog post:`
 
-  console.log({ prompt })
+  const payload = {
+    model: "text-davinci-003",
+    prompt,
+    temperature: 0.7,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+    max_tokens: 200,
+    stream: true,
+    n: 1,
+  };
 
 
-  // const payload: OpenAIStreamPayload = {
-  //   model: "gpt-3.5-turbo",
-  //   messages: [{ role: "user", content: prompt }],
-  //   temperature: 0.7,
-  //   top_p: 1,
-  //   frequency_penalty: 0,
-  //   presence_penalty: 0,
-  //   max_tokens: 1000,
-  //   stream: true,
-  //   n: 1,
-  // };
-
-  // const stream = await OpenAIStream(payload);
-
-  const completion = await openai.createChatCompletion(
-    {
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `You are a blog content writer for a SaaS startup. You are writing a blog post about the topic: ${topic}`,
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      stream: true,
-    },
-    { responseType: "stream" }
-  );
-
-  completion.data.pipe(res);
-
-
-  //  const result = await getOpenAIAnswer(prompt)
-
-
-  // return  res.status(200).json({result })
-
-  /*
-  [
-    Document {
-      pageContent: 'pinecone is a vector db',
-      metadata: { foo: 'bar' }
-    }
-  ]
-  */
-
-  // /* Use as part of a chain (currently no metadata filters) */
-  // const model = new OpenAI();
-  // const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-  //   k: 1,
-  //   returnSourceDocuments: true,
-  // });
-  // const response = await chain.call({ query: "4 ways to exit a SaaS startup" });
-  // console.log(response);
-
-
-  // res.status(200).json({ name: 'Example' })
+  const stream = await OpenAIStream(payload);
+  return new Response(stream);
 }
 
 export const getOpenAIAnswer = async (context: string) => {
