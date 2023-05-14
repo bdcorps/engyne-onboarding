@@ -9,9 +9,8 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { createParser } from "eventsource-parser";
 import { useRouter } from "next/router";
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useCallback, useState } from "react";
 
 interface SiteProps {}
 
@@ -132,63 +131,88 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
   const [content, setContent] = useState("");
   const [isWriting, setIsWriting] = useState<boolean>(false);
 
-  async function handleGenerateBlog() {
+  const handleGenerateBlog = useCallback(() => {
     setIsWriting(true);
 
-    console.log("wabout to write");
+    setContent("");
 
-    const response = await fetch("/api/generate-old", {
-      method: "POST",
-      body: JSON.stringify({
-        title,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const aiStream = new EventSource(
+      `/api/generate-old?title=${encodeURIComponent(title)}`
+    );
 
-    if (!response || !response.body) {
-      console.log("no body");
-
-      return;
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    function onParse(event: any) {
-      if (event.type === "event") {
-        try {
-          console.log("data coming in ");
-
-          const data = JSON.parse(event.data);
-          data.choices
-            .filter(({ delta }: any) => !!delta.content)
-            .forEach(({ delta }: any) => {
-              console.log("writing", delta.content);
-              setContent((prev: string) => {
-                return `${prev || ""}${delta.content}`;
-              });
-            });
-        } catch (e) {
-          console.log(e);
-        }
+    aiStream.addEventListener("message", (e) => {
+      if (e.data === "[DONE]") {
+        aiStream.close();
+        setIsWriting(false);
+        return;
       }
-    }
 
-    const parser = createParser(onParse);
+      const message = JSON.parse(e.data);
+      const delta = message.choices[0].delta.content;
 
-    while (true) {
-      const { value, done } = await reader.read();
-      const dataString = decoder.decode(value);
-      if (done || dataString.includes("[DONE]")) break;
-      parser.feed(dataString);
-    }
+      if (delta) {
+        setContent((prev: any) => prev + delta);
+      }
+    });
+  }, [setContent, content, title]);
 
-    console.log("done writing");
+  // async function handleGenerateBlog() {
+  //   setIsWriting(true);
 
-    setIsWriting(false);
-  }
+  //   console.log("wabout to write");
+
+  //   const response = await fetch("/api/generate-old", {
+  //     method: "POST",
+  //     body: JSON.stringify({
+  //       title,
+  //     }),
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //   });
+
+  //   if (!response || !response.body) {
+  //     console.log("no body");
+
+  //     return;
+  //   }
+
+  //   const reader = response.body.getReader();
+  //   const decoder = new TextDecoder();
+
+  //   function onParse(event: any) {
+  //     if (event.type === "event") {
+  //       try {
+  //         console.log("data coming in ");
+
+  //         const data = JSON.parse(event.data);
+  //         data.choices
+  //           .filter(({ delta }: any) => !!delta.content)
+  //           .forEach(({ delta }: any) => {
+  //             console.log("writing", delta.content);
+  //             setContent((prev: string) => {
+  //               return `${prev || ""}${delta.content}`;
+  //             });
+  //           });
+  //       } catch (e) {
+  //         console.log(e);
+  //       }
+  //     }
+  //   }
+
+  // const parser = createParser(onParse);
+
+  //   while (true) {
+  //     const { value, done } = await reader.read();
+  //     const dataString = decoder.decode(value);
+  //     if (done || dataString.includes("[DONE]")) break;
+  //     parser.feed(dataString);
+  //   }
+
+  //   console.log("done writing");
+
+  //   setIsWriting(false);
+  // }
 
   return (
     <HStack
@@ -215,7 +239,9 @@ const BlogTopic: FunctionComponent<BlogTopicProps> = ({
         <Button variant="ghost">Write →</Button>
       )}
 
-      <BlogDrawer title={title} content={content} isOpen={true}></BlogDrawer>
+      {isWriting && (
+        <BlogDrawer title={title} content={content} isOpen={true}></BlogDrawer>
+      )}
     </HStack>
   );
 };
