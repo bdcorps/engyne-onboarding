@@ -21,6 +21,7 @@ export default async function handler(
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
+    'Content-Encoding': 'none',
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
   });
