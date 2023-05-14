@@ -28,18 +28,20 @@ const Index: FunctionComponent<IndexProps> = () => {
     <>
       <Layout>
         <Center h="100vh" alignItems="center" justifyItems="center">
-          <Text>Not signed in</Text>
-          <Button
-            colorScheme="brand"
-            onClick={(e) => {
-              e.preventDefault();
-              signIn("google", {
-                callbackUrl: `/onboarding`,
-              });
-            }}
-          >
-            Sign in with Google
-          </Button>
+          <VStack w="full" align="center">
+            <Text>Not signed in</Text>
+            <Button
+              colorScheme="brand"
+              onClick={(e) => {
+                e.preventDefault();
+                signIn("google", {
+                  callbackUrl: `/onboarding`,
+                });
+              }}
+            >
+              Sign in with Google
+            </Button>
+          </VStack>
         </Center>
       </Layout>
     </>
